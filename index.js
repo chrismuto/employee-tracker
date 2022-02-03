@@ -2,6 +2,7 @@
 const inquirer = require("inquirer");
 const mysql = require("mysql2");
 const cTable = require("console.table");
+const { sequelize } = require("sequelize");
 
 //create connection to mysql database
 const db = mysql.createConnection({
@@ -11,24 +12,17 @@ const db = mysql.createConnection({
   database: "employee_db",
 });
 
-// db.query("SELECT * FROM department", function (err, results) {
-//   // create an array of inquirer choice objects from the students
-//   const choices = results.map((student) => ({
-//     name: `${student.first_name} ${student.last_name}`,
-//     value: student,
-//   }));
-// prompt user
 function mainMenu() {
   inquirer
     .prompt([{
       type: "list",
       name: "mainMenu",
       message: "Select an option",
-      choices: ["View all employees",
+      choices: ["View All Employees",
         "Add Employee",
-        'Update Employee Role',
-        'View all Roles',
-        'Add role',
+        'Update Employee Job',
+        'View All Jobs',
+        'Add Job',
         "View All Departments",
         'Add Departments'
       ],
@@ -42,16 +36,16 @@ function mainMenu() {
           addEmployee();
           break
         case 'Update Employee Role':
-          console.log('Sales');
+          updateEmployee();
           break
         case 'View All Jobs':
-          viewRoles();
-          break
-        case 'Add Role':
-          addRole();
+          viewJobs();
           break
         case 'View All Departments':
           viewDepartments();
+          break
+        case 'Add Job':
+          addJob();
           break
         case 'Add Departments':
           addDepartment();
@@ -80,8 +74,8 @@ const viewEmployees = () => {
   })
 }
 
-const viewRoles = () => {
-  db.query('SELECT employee.first_name, employee.last_name from employee', (err, res) => {
+const viewJobs = () => {
+  db.query('SELECT title from job', (err, res) => {
     if (err) {
       throw err
     } else {
@@ -92,7 +86,46 @@ const viewRoles = () => {
 }
 
 const addEmployee = () => {
-
+  inquirer
+  .prompt([
+    {
+    type: "input",
+    name: "firstName",
+    message: "Enter first name",
+  },
+  {
+    type: "input",
+    name: "lastName",
+    message: "Enter last name",
+  },
+  {
+    type: "input",
+    name: "newJobId",
+    message: "Enter job ID",
+    validate: {
+      notNull: true,
+      isInt: true
+    }
+  },
+  {
+    type: "input",
+    name: "newManId",
+    message: "Enter manager ID",
+    validate: {
+      notNull: true,
+      isInt: true
+    }
+  }
+])
+  .then((answers) => {
+    db.query(`INSERT INTO employee(first_name, last_name, job_id, manager_id) values ('${answers.firstName}', '${answers.lastName}', '${answers.newJobId}', '${answers.newManId}')`);
+    if (err) {
+      throw err
+    } else {
+      console.table(res)
+    }
+    mainMenu();
+  });
 }
 
 const addDepartment = () => {
@@ -103,12 +136,17 @@ const addDepartment = () => {
       message: "Enter department",
     }])
     .then((answers) => {
-      db.query(`INSERT INTO department(name) values ('${answers.newDepartment}')`)
+      db.query(`INSERT INTO department(name) values ('${answers.newDepartment}')`);
+      if (err) {
+        throw err
+      } else {
+        console.table(res)
+      }
       mainMenu();
     });
 }
 
-const addRole = () => {
+const addJob = () => {
   inquirer
   .prompt([
     {
@@ -120,15 +158,28 @@ const addRole = () => {
     type: "input",
     name: "newSalary",
     message: "Enter salary",
+    validate: {
+      notNull: true,
+      isInt: true
+    }
   },
   {
     type: "input",
     name: "newDepId",
-    message: "Enter salary",
+    message: "Enter Department ID",
+    validate: {
+      notNull: true,
+      isInt: true
+    }
   }
 ])
   .then((answers) => {
-    db.query(`INSERT INTO job(title, salary, department_id) values ('${answers.newRole}', '${answers.newSalary}', '${answers.newDepId}')`)
+    db.query(`INSERT INTO job(title, salary, department_id) values ('${answers.newRole}', '${answers.newSalary}', '${answers.newDepId}')`);
+    if (err) {
+      throw err
+    } else {
+      console.table(res)
+    }
     mainMenu();
   });
 }
@@ -136,39 +187,4 @@ const addRole = () => {
 const updateEmployee = () => {
 
 }
-// `SELECT job.id, job.title, job.salary, department.name AS department from job JOIN department ON job.department_id = department.id
-
-// function ()
-// do a query db.query(SELECT title FROM job. (res, err) => {
-// error catch
-// const options = res
-// choices: options for that prompt
-//}
-
-// inquirer
-// .prompt([{
-//   type: "list",
-//   name: "department",
-//   message: "Select a department",
-//   choices: ["Engineering", "Accounting", 'Sales', 'Auditing', 'Research'],
-// }, ])
-// .then((answers) => {
-//   switch (answers.department) {
-//     case 'Engineering':
-//       db.query('SELECT * from employee')
-//       console.log('Engineering');
-//       break
-//     case 'Accounting':
-//       console.log('Accounting');
-//       break
-//     case 'Sales':
-//       console.log('Sales');
-//       break
-//     case 'Auditing':
-//       console.log('Auditing');
-//       break
-//     case 'Research':
-//       console.log('Research');
-//   }
-// });
 mainMenu();
